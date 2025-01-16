@@ -16,3 +16,7 @@
 
 # Go workspace file
 go.work
+
+# ignore ssl certs 
+*.key
+*.crt
