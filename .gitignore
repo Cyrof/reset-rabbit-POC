@@ -20,3 +20,7 @@ go.work
 # ignore ssl certs 
 *.key
 *.crt
+*.pem
+
+sslmanager.cert
+internal_options.conf

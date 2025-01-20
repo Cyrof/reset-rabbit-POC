@@ -1,0 +1,13 @@
+<group name="nginx">
+	<rule id="100001" level="10">
+		<decoded_as>syslog</decoded_as>
+		<field name="nginx.http_status">503</field>
+		<description>Potential DoS attack detected: High number of 503 responses</description>
+		<group>nginx, attack</group>
+	</rule>
+	<rule id="100002" level="10">
+		<regex>Too many requests</regex>
+		<description>Potential DoS attack:Excessive request from a single IP</description>
+		<group>nginx, attack</group>
+	</rule>
+</group>

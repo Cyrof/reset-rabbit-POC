@@ -23,6 +23,63 @@ services:
       mitigation_network:
         ipv4_address: 172.25.0.3
 
+  wazuh-indexer:
+    image: wazuh/wazuh-indexer:4.10.1
+    container_name: wazuh-indexer
+    hostname: wazuh-indexer
+    ports:
+      - "9200:9200" 
+    environment:
+      - discovery.type=single.node
+    volumes:
+       - ./wazuh/config/wazuh_indexer_ssl_certs/root-ca.pem:/usr/share/wazuh-indexer/certs/root-ca.pem
+       - ./wazuh/config/wazuh_indexer_ssl_certs/wazuh.indexer-key.pem:/usr/share/wazuh-indexer/certs/wazuh.indexer.key
+       - ./wazuh/config/wazuh_indexer_ssl_certs/wazuh.indexer.pem:/usr/share/wazuh-indexer/certs/wazuh.indexer.pem
+       - ./wazuh/config/wazuh_indexer_ssl_certs/admin.pem:/usr/share/wazuh-indexer/certs/admin.pem
+       - ./wazuh/config/wazuh_indexer_ssl_certs/admin-key.pem:/usr/share/wazuh-indexer/certs/admin-key.pem
+    networks:
+      mitigation_network:
+        ipv4_address: 172.25.0.4
+
+  wazuh-manager:
+    image: wazuh/wazuh-manager:4.10.1
+    container_name: wazuh-manager
+    hostname: wazuh-manager
+    ports:
+      - "55000:55000" # agent communication
+      - "1514:1514/udp" # syslog
+    volumes:
+      - ./wazuh/config/wazuh_indexer_ssl_certs/root-ca-manager.pem:/etc/ssl/root-ca.pem
+      - ./wazuh/config/wazuh_indexer_ssl_certs/wazuh.manager.pem:/etc/ssl/filebeat.pem
+      - ./wazuh/config/wazuh_indexer_ssl_certs/wazuh.manager-key.pem:/etc/ssl/filebeat.key
+      - ./wazuh/wazuh_manager:/var/osddsec/etc # custom wazuh manager config 
+      - ./logs:/var/log/nginx # mount nginx logs 
+    networks:
+      mitigation_network:
+        ipv4_address: 172.25.0.5
+    depends_on:
+      - wazuh-indexer
+
+  wazuh-dashboard:
+    image: wazuh/wazuh-dashboard:4.10.1
+    container_name: wazuh-dashboard
+    hostname: wazuh-dashboard
+    ports:
+      - "5601:5601" # wazuh dashboard (Kibana) interface
+    environment:
+      - WAZUH_MANAGER=wazuh-manager
+    volumes:
+      - ./wazuh/config/wazuh_indexer_ssl_certs/wazuh.dashboard.pem:/usr/share/wazuh-dashboard/certs/wazuh-dashboard.pem
+      - ./wazuh/config/wazuh_indexer_ssl_certs/wazuh.dashboard-key.pem:/usr/share/wazuh-dashboard/certs/wazuh-dashboard-key.pem
+      - ./wazuh/config/wazuh_indexer_ssl_certs/root-ca.pem:/usr/share/wazuh-dashboard/certs/root-ca.pem
+    networks:
+      mitigation_network: 
+        ipv4_address: 172.25.0.6
+    depends_on:
+      - wazuh-indexer
+      - wazuh-manager
+    
+
 networks:
   mitigation_network:
     driver: bridge
