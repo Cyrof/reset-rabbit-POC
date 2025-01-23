@@ -24,3 +24,4 @@ go.work
 
 sslmanager.cert
 internal_options.conf
+smtp_sasl_passwd
