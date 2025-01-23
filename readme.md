@@ -31,6 +31,9 @@ This repository has been extended to include both a vulnerable environment and a
             - 3 Wazuh containers (server, API, and Elasticsearch) for enhanced logging and attack detection.
         - `wazuh/manager/`: Contains:
             - `local_rules.xml`: Custom Wazuh rules for detecting HTTP/2 DoS attacks.
+        - `postfix/`: Contains:
+            - `Dockerfile`: Used to build the Postfix SMTP server as a relay.
+            - `entrypoint.sh`: Entrypoint script for configuring Postfix at runtime.
 
 ---
 
@@ -110,7 +113,29 @@ Open `mitigation.yaml` and ensure that the volume paths in the Wazuh containers 
     ```
     Update `/home/cve/wazuh-docker/...` to match the actual path to the Wazuh Docker configuration files on your device.
 
-7. **Start the Mitigated Environment**: 
+7. **Set Up Postfix SMTP Server**:
+    Nagivate to the `postfix/` folder and create a file named `smtp_sasl_passwd` with the following content:
+    ```
+    [smtp.gmail.com]:587 <sender_email>:<app password>
+    ```
+    Replace `<sender_email` with email that you want to use to send email from and `<app password>` with the app password of the email instead of the password.
+
+    Build the Postfix image:
+    ```bash 
+    sudo docker-compose -f mitigation.yaml build
+    ```
+
+8. **Update Wazuh Email Notification Configuration**:
+    Update the following specific sections in the `wazuh_manager.conf` file: 
+    ```xml 
+    <email_notification>yes</email_notification>
+    <smtp_server>postfix-relay</smtp_server>
+    <email_from>wazuh@example.wazuh.com</email_from>
+    <email_to>recipient@gmail.com</email_to>
+    <email_maxperhour>12</email_maxperhour>
+    ```
+
+9. **Start the Mitigated Environment**: 
     ```bash 
     sudo docker-compose -f mitigation.yaml up -d 
     ```
@@ -120,7 +145,7 @@ Open `mitigation.yaml` and ensure that the volume paths in the Wazuh containers 
     - The vulnerable Apache server.
     - Wazuh components (server, API, Elasticsearch).
 
-8. **Run the Exploit Against the Mitigated Server**:
+10. **Run the Exploit Against the Mitigated Server**:
     ```bash 
     cd .. 
     cd exploit 
@@ -157,6 +182,10 @@ rule-id: 100001 OR rule-id: 100002
 │   │   └── error.log
 │   ├── mitigation.yaml
 │   ├── nginx.conf
+│   ├── postfix
+│   │   ├── Dockerfile
+│   │   ├── entrypoint.sh
+│   │   └── smtp_sasl_passwd
 │   └── wazuh_manager
 │       └── local_rules.xml
 ├── readme.md
