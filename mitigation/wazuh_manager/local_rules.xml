@@ -1,13 +1,19 @@
 <group name="nginx">
-	<rule id="100001" level="10">
-		<decoded_as>syslog</decoded_as>
-		<field name="nginx.http_status">503</field>
+	<!-- Rule for HTTP 503 error -->
+	<rule id="100001" level="15" frequency="100" timeframe="30" overwrite="yes">
+		<if_matched_sid>31123</if_matched_sid>
+		<match>HTTP/2.0" 503</match>
 		<description>Potential DoS attack detected: High number of 503 responses</description>
 		<group>nginx, attack</group>
 	</rule>
-	<rule id="100002" level="10">
-		<regex>Too many requests</regex>
+
+	<rule id="100002" level="15" frequency="100" timeframe="30" overwrite="yes">
+		<if_matched_sid>31301</if_matched_sid>
+		<match>limiting requests</match>
 		<description>Potential DoS attack:Excessive request from a single IP</description>
 		<group>nginx, attack</group>
+	</rule>
+	<rule id="31163" level="0" overwrite="yes" noalert="1">
+		<description> Rule suppression</description>
 	</rule>
 </group>
